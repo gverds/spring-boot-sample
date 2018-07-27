@@ -12,8 +12,32 @@ pipeline {
       }
     }
     stage('report') {
+      parallel {
+        stage('report') {
+          steps {
+            junit 'target/surefire-reports/*.xml'
+          }
+        }
+        stage('report') {
+          steps {
+            cobertura(conditionalCoverageTargets: 'target/site/cobertura/coverage.xml')
+          }
+        }
+      }
+    }
+    stage('package') {
       steps {
-        junit 'target/surefire-reports/*.xml'
+        sh 'mvn package'
+      }
+    }
+    stage('archive') {
+      steps {
+        sh 'java -jar target/spring-boot-sample-data-rest-0.1.0.jar'
+      }
+    }
+    stage('deploy') {
+      steps {
+        sh 'make deploy-default'
       }
     }
   }

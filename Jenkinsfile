@@ -23,7 +23,7 @@ pipeline {
     }
     stage('archive') {
       steps {
-        sh 'java -jar target/spring-boot-sample-data-rest-0.1.0.jar'
+        sh 'target/spring-boot-sample-data-rest-0.1.0.jar'
       }
     }
     stage('deploy') {

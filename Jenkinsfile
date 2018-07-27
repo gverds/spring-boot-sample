@@ -6,6 +6,25 @@ pipeline {
         checkout scm
       }
     }
+    stage('test') {
+      steps {
+        sh 'mvn clean cobertura:cobertura test'
+      }
+    }
+    stage('report') {
+      parallel {
+        stage('report') {
+          steps {
+            junit 'target/surefire-reports/*.xml'
+          }
+        }
+        stage('cobertura') {
+          steps {
+            cobertura(coberturaReportFile: 'target/surefire-reports/*.xml')
+          }
+        }
+      }
+    }
   }
   post {
     always {

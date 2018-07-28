@@ -23,7 +23,7 @@ pipeline {
     }
     stage('archive') {
       steps {
-        sh 'target/spring-boot-sample-data-rest-0.1.0.jar'
+        archiveArtifacts(artifacts: 'target/spring-boot-sample-data-rest-0.1.0.jar', allowEmptyArchive: true)
       }
     }
     stage('deploy') {

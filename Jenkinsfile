@@ -3,7 +3,6 @@ pipeline {
   stages {
     stage('checkout project') {
       steps {
-        sh 'sudo rm -rf target'
         checkout scm
       }
     }

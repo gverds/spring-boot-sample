@@ -6,91 +6,49 @@ pipeline {
         checkout scm
       }
     }
-    stage('check env') {
-      parallel {
-        stage('check mvn') {
-          steps {
-            sh 'mvn -v'
-          }
-        }
-        stage('check java') {
-          steps {
-            sh 'java -version'
-          }
-        }
-      }
-    }
-
     stage('test') {
       steps {
         sh 'mvn test cobertura:cobertura'
       }
-    }      
+    }
     stage('report') {
-      parallel {
-        stage('junit') {
-          steps {
-            junit '**/target/surefire-reports/TEST-*.xml'
-          }
-        }
-        stage('coverage') {
-          steps {
-            cobertura(coberturaReportFile: 'target/site/cobertura/coverage.xml')
-          }
-        }
+      steps {
+        junit 'target/surefire-reports/*.xml'
       }
     }
     stage('package') {
       steps {
-        sh 'mvn package'
+        sh 'docker-compose run package'
       }
     }
-    stage('stage') {
-        input {
-            message "Should we continue?"
-            ok "Yes, we should."
-            submitter "admin"
-            parameters {
-                string(name: 'PERSON', defaultValue: 'Mr Jenkins', description: 'Who should I say hello to?')
-            }
-        }
-        steps {
-            echo "Hello, ${PERSON}, nice to meet you."
-            sh 'make deploy-default'
-        }
-    }
-    stage('preview') {
-        input {
-            message "Should we continue?"
-            ok "Yes, we should."
-            submitter "admin"
-        }
-        steps {
-          echo "every thing is good!"
-        }
-    }    
     stage('artifact') {
       steps {
-        archiveArtifacts(artifacts: '**/target/*.jar', fingerprint: true)
+        archiveArtifacts 'target/spring-boot-sample-data-rest-0.1.0.jar'
       }
     }
     stage('deploy') {
       steps {
-        sh 'make deploy-default'
+        sh '''make build-docker-prod-image
+docker push localhost:5000/java_sample_prod
+make deploy-production-ssh'''
       }
     }
   }
-  post { 
-    always { 
+  post {
+    always {
       echo 'I will always say Hello again!'
+
     }
-    success { 
+
+    success {
       echo 'success!'
-      // slackSend channel: '#integration', color: 'good', message: "success ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)", teamDomain: 'agileworks-tw', token: 'JhXFKEl6cBFoQ4v52BEJw9Mr'
-    }  
-    failure { 
-      echo 'failure!'
-      // slackSend channel: '#integration', color: 'danger', message: "fail ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)", teamDomain: 'agileworks-tw', token: 'JhXFKEl6cBFoQ4v52BEJw9Mr'
+
     }
-  }    
+
+    failure {
+      echo 'failure!'
+
+    }
+
+  }
 }
